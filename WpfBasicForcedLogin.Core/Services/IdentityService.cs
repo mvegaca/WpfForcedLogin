@@ -24,12 +24,10 @@ namespace WpfBasicForcedLogin.Core.Services
         // Please, follow these steps to create a new one with Azure Active Directory and replace it before going to production.
         // https://docs.microsoft.com/azure/active-directory/develop/quickstart-register-app
         // private readonly string _clientId = ConfigurationManager.AppSettings["IdentityClientId"];
-        private readonly string _clientId = "31f2256a-e9aa-4626-be94-21c17add8fd9";
-
+        // private readonly string _clientId = "881e8dd2-ee52-455d-b731-ad3c56fdce97"; // UWP
+        private readonly string _clientId = "31f2256a-e9aa-4626-be94-21c17add8fd9"; // WPF
         private readonly string[] _graphScopes = new string[] { "user.read" };
-        private readonly object _fileLock = new object();
-        private readonly string _msalCacheFilePath = Assembly.GetExecutingAssembly().Location + ".msalcache.bin3";
-
+        private readonly IIdentityCacheService _identityCacheService;
         private bool _integratedAuthAvailable;
         private IPublicClientApplication _client;
         private AuthenticationResult _authenticationResult;
@@ -38,45 +36,43 @@ namespace WpfBasicForcedLogin.Core.Services
 
         public event EventHandler LoggedOut;
 
-        public void InitializeWithAadAndPersonalMsAccounts(string redirectUri = null, bool addCache = false)
+        public IdentityService()
+        {
+        }
+
+        public IdentityService(IIdentityCacheService identityCacheService)
+        {
+            _identityCacheService = identityCacheService;
+        }
+
+        public void InitializeWithAadAndPersonalMsAccounts(string redirectUri = null)
         {
             _integratedAuthAvailable = false;
             _client = PublicClientApplicationBuilder.Create(_clientId)
                                                     .WithAuthority(AadAuthorityAudience.AzureAdAndPersonalMicrosoftAccount)
                                                     .WithRedirectUri(redirectUri)
                                                     .Build();
-            AddCacheIfNeeded(addCache);
+            AddCacheIfNeeded();
         }
 
-        public void InitializeWithAadMultipleOrgs(bool integratedAuth = false, string redirectUri = null, bool addCache = false)
+        public void InitializeWithAadMultipleOrgs(bool integratedAuth = false, string redirectUri = null)
         {
             _integratedAuthAvailable = integratedAuth;
             _client = PublicClientApplicationBuilder.Create(_clientId)
                                                     .WithAuthority(AadAuthorityAudience.AzureAdMultipleOrgs)
                                                     .WithRedirectUri(redirectUri)
                                                     .Build();
-            AddCacheIfNeeded(addCache);
+            AddCacheIfNeeded();
         }
 
-        public void InitializeWithAadSingleOrg(string tenant, bool integratedAuth = false, string redirectUri = null, bool addCache = false)
+        public void InitializeWithAadSingleOrg(string tenant, bool integratedAuth = false, string redirectUri = null)
         {
             _integratedAuthAvailable = integratedAuth;
             _client = PublicClientApplicationBuilder.Create(_clientId)
                                                     .WithAuthority(AzureCloudInstance.AzurePublic, tenant)
                                                     .WithRedirectUri(redirectUri)
                                                     .Build();
-            AddCacheIfNeeded(addCache);
-        }
-
-        private void AddCacheIfNeeded(bool addCache)
-        {
-            if (addCache)
-            {
-                // .Net Core Apps should provide a mechanism to serialize and deserialize the user token cache
-                // https://aka.ms/msal-net-token-cache-serialization
-                _client.UserTokenCache.SetBeforeAccess(BeforeAccessNotification);
-                _client.UserTokenCache.SetAfterAccess(AfterAccessNotification);
-            }
+            AddCacheIfNeeded();
         }
 
         public bool IsLoggedIn() => _authenticationResult != null;
@@ -231,29 +227,27 @@ namespace WpfBasicForcedLogin.Core.Services
             }
         }
 
-        private void BeforeAccessNotification(TokenCacheNotificationArgs args)
+        private void AddCacheIfNeeded()
         {
-            lock (_fileLock)
+            if (_identityCacheService != null)
             {
-                if (File.Exists(_msalCacheFilePath))
+                // .Net Core Apps should provide a mechanism to serialize and deserialize the user token cache
+                // https://aka.ms/msal-net-token-cache-serialization
+                _client.UserTokenCache.SetBeforeAccess((args) =>
                 {
-                    var encryptedData = File.ReadAllBytes(_msalCacheFilePath);
-                    var data = ProtectedData.Unprotect(encryptedData, null, DataProtectionScope.CurrentUser);
-                    args.TokenCache.DeserializeMsalV3(data);
-                }
-            }
-        }
-
-        private void AfterAccessNotification(TokenCacheNotificationArgs args)
-        {
-            if (args.HasStateChanged)
-            {
-                lock (_fileLock)
+                    var data = _identityCacheService.ReadMsalToken();
+                    if (data != default)
+                    {
+                        args.TokenCache.DeserializeMsalV3(data);
+                    }
+                });
+                _client.UserTokenCache.SetAfterAccess((args) =>
                 {
-                    var data = args.TokenCache.SerializeMsalV3();
-                    var encryptedData = ProtectedData.Protect(data, null, DataProtectionScope.CurrentUser);
-                    File.WriteAllBytes(_msalCacheFilePath, encryptedData);
-                }
+                    if (args.HasStateChanged)
+                    {
+                        _identityCacheService.SaveMsalToken(args.TokenCache.SerializeMsalV3());
+                    }
+                });
             }
         }
     }

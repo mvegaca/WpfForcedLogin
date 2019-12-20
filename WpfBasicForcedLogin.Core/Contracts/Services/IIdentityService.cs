@@ -12,9 +12,9 @@ namespace WpfBasicForcedLogin.Core.Contracts.Services
 
         void InitializeWithAadAndPersonalMsAccounts(string redirectUri = null);
 
-        void InitializeWithAadMultipleOrgs(bool integratedAuth = false);
+        void InitializeWithAadMultipleOrgs(bool integratedAuth = false, string redirectUri = null);
 
-        void InitializeWithAadSingleOrg(string tenant, bool integratedAuth = false);
+        void InitializeWithAadSingleOrg(string tenant, bool integratedAuth = false, string redirectUri = null);
 
         bool IsLoggedIn();
 
