@@ -27,12 +27,10 @@ namespace WpfBasicForcedLogin.Services
         {
             _serviceProvider = serviceProvider;
             _navigationService = navigationService;
-            _identityService = identityService;
-            _userDataService = userDataService;
-            _shellWindow = _serviceProvider.GetService(typeof(IShellWindow)) as IShellWindow;
-            _navigationService.Initialize(_shellWindow.GetNavigationFrame());
             _themeSelectorService = themeSelectorService;
             _persistAndRestoreService = persistAndRestoreService;
+            _identityService = identityService;
+            _userDataService = userDataService;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -42,7 +40,7 @@ namespace WpfBasicForcedLogin.Services
             _userDataService.Initialize();
             _identityService.LoggedIn += OnLoggedIn;
             _identityService.LoggedOut += OnLoggedOut;
-            _identityService.InitializeWithAadAndPersonalMsAccounts();
+            _identityService.InitializeWithAadAndPersonalMsAccounts("http://localhost");
             var silentLoginSuccess = await _identityService.AcquireTokenSilentAsync();
             if (!silentLoginSuccess || !_identityService.IsAuthorized())
             {
@@ -52,6 +50,8 @@ namespace WpfBasicForcedLogin.Services
                 return;
             }
 
+            _shellWindow = _serviceProvider.GetService(typeof(IShellWindow)) as IShellWindow;
+            _navigationService.Initialize(_shellWindow.GetNavigationFrame());
             _shellWindow.ShowWindow();
             _navigationService.NavigateTo(typeof(MainViewModel).FullName);
 
@@ -62,6 +62,8 @@ namespace WpfBasicForcedLogin.Services
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
+            _identityService.LoggedIn -= OnLoggedIn;
+            _identityService.LoggedOut -= OnLoggedOut;
             _persistAndRestoreService.PersistData();
         }
 
@@ -79,6 +81,8 @@ namespace WpfBasicForcedLogin.Services
 
         private void OnLoggedIn(object sender, EventArgs e)
         {
+            _shellWindow = _serviceProvider.GetService(typeof(IShellWindow)) as IShellWindow;
+            _navigationService.Initialize(_shellWindow.GetNavigationFrame());
             _shellWindow.ShowWindow();
             _navigationService.NavigateTo(typeof(MainViewModel).FullName);
             _logInWindow.CloseWindow();
@@ -94,8 +98,8 @@ namespace WpfBasicForcedLogin.Services
             _shellWindow.CloseWindow();
             _navigationService.UnregisterNavigation();
 
-            _shellWindow = _serviceProvider.GetService(typeof(IShellWindow)) as IShellWindow;
-            _navigationService.Initialize(_shellWindow.GetNavigationFrame());
+            // _shellWindow = _serviceProvider.GetService(typeof(IShellWindow)) as IShellWindow;
+            // _navigationService.Initialize(_shellWindow.GetNavigationFrame());
         }
     }
 }

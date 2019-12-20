@@ -10,7 +10,7 @@ namespace WpfBasicForcedLogin.Core.Contracts.Services
 
         event EventHandler LoggedOut;
 
-        void InitializeWithAadAndPersonalMsAccounts();
+        void InitializeWithAadAndPersonalMsAccounts(string redirectUri = null);
 
         void InitializeWithAadMultipleOrgs(bool integratedAuth = false);
 

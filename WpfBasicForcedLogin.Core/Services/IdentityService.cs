@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
 using WpfBasicForcedLogin.Core.Contracts.Services;
@@ -27,7 +28,7 @@ namespace WpfBasicForcedLogin.Core.Services
 
         private readonly string[] _graphScopes = new string[] { "user.read" };
         private readonly object _fileLock = new object();
-        private readonly string _cacheFilePath = Assembly.GetExecutingAssembly().Location + ".msalcache.bin3";
+        private readonly string _msalCacheFilePath = Assembly.GetExecutingAssembly().Location + ".msalcache.bin3";
 
         private bool _integratedAuthAvailable;
         private IPublicClientApplication _client;
@@ -37,34 +38,45 @@ namespace WpfBasicForcedLogin.Core.Services
 
         public event EventHandler LoggedOut;
 
-        public void InitializeWithAadAndPersonalMsAccounts()
+        public void InitializeWithAadAndPersonalMsAccounts(string redirectUri = null, bool addCache = false)
         {
             _integratedAuthAvailable = false;
             _client = PublicClientApplicationBuilder.Create(_clientId)
                                                     .WithAuthority(AadAuthorityAudience.AzureAdAndPersonalMicrosoftAccount)
-                                                    .WithRedirectUri("http://localhost")
+                                                    .WithRedirectUri(redirectUri)
                                                     .Build();
-
-            // .Net Core Apps should provide a mechanism to serialize and deserialize the user token cache
-            // https://aka.ms/msal-net-token-cache-serialization
-            _client.UserTokenCache.SetBeforeAccess(BeforeAccessNotification);
-            _client.UserTokenCache.SetAfterAccess(AfterAccessNotification);
+            AddCacheIfNeeded(addCache);
         }
 
-        public void InitializeWithAadMultipleOrgs(bool integratedAuth = false)
+        public void InitializeWithAadMultipleOrgs(bool integratedAuth = false, string redirectUri = null, bool addCache = false)
         {
             _integratedAuthAvailable = integratedAuth;
             _client = PublicClientApplicationBuilder.Create(_clientId)
                                                     .WithAuthority(AadAuthorityAudience.AzureAdMultipleOrgs)
+                                                    .WithRedirectUri(redirectUri)
                                                     .Build();
+            AddCacheIfNeeded(addCache);
         }
 
-        public void InitializeWithAadSingleOrg(string tenant, bool integratedAuth = false)
+        public void InitializeWithAadSingleOrg(string tenant, bool integratedAuth = false, string redirectUri = null, bool addCache = false)
         {
             _integratedAuthAvailable = integratedAuth;
             _client = PublicClientApplicationBuilder.Create(_clientId)
                                                     .WithAuthority(AzureCloudInstance.AzurePublic, tenant)
+                                                    .WithRedirectUri(redirectUri)
                                                     .Build();
+            AddCacheIfNeeded(addCache);
+        }
+
+        private void AddCacheIfNeeded(bool addCache)
+        {
+            if (addCache)
+            {
+                // .Net Core Apps should provide a mechanism to serialize and deserialize the user token cache
+                // https://aka.ms/msal-net-token-cache-serialization
+                _client.UserTokenCache.SetBeforeAccess(BeforeAccessNotification);
+                _client.UserTokenCache.SetAfterAccess(AfterAccessNotification);
+            }
         }
 
         public bool IsLoggedIn() => _authenticationResult != null;
@@ -223,9 +235,10 @@ namespace WpfBasicForcedLogin.Core.Services
         {
             lock (_fileLock)
             {
-                if (File.Exists(_cacheFilePath))
+                if (File.Exists(_msalCacheFilePath))
                 {
-                    var data = File.ReadAllBytes(_cacheFilePath);
+                    var encryptedData = File.ReadAllBytes(_msalCacheFilePath);
+                    var data = ProtectedData.Unprotect(encryptedData, null, DataProtectionScope.CurrentUser);
                     args.TokenCache.DeserializeMsalV3(data);
                 }
             }
@@ -238,7 +251,8 @@ namespace WpfBasicForcedLogin.Core.Services
                 lock (_fileLock)
                 {
                     var data = args.TokenCache.SerializeMsalV3();
-                    File.WriteAllBytes(_cacheFilePath, data);
+                    var encryptedData = ProtectedData.Protect(data, null, DataProtectionScope.CurrentUser);
+                    File.WriteAllBytes(_msalCacheFilePath, encryptedData);
                 }
             }
         }
