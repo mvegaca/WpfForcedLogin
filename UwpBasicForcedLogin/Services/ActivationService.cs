@@ -43,7 +43,7 @@ namespace UwpBasicForcedLogin.Services
                 // take into account that the splash screen is shown while this code runs.
                 await InitializeAsync();
                 UserDataService.Initialize();
-                IdentityService.InitializeWithAadAndPersonalMsAccounts();
+                await IdentityService.InitializeWithAadAndPersonalMsAccountsAsync();
                 var silentLoginSuccess = await IdentityService.AcquireTokenSilentAsync();
                 if (!silentLoginSuccess || !IdentityService.IsAuthorized())
                 {

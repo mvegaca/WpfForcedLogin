@@ -6,6 +6,7 @@ using System.Windows.Input;
 using MahApps.Metro.Controls;
 
 using WpfBasicForcedLogin.Contracts.Services;
+using WpfBasicForcedLogin.Core.Contracts.Services;
 using WpfBasicForcedLogin.Helpers;
 using WpfBasicForcedLogin.Strings;
 
@@ -14,6 +15,9 @@ namespace WpfBasicForcedLogin.ViewModels
     public class ShellViewModel : Observable, IDisposable
     {
         private readonly INavigationService _navigationService;
+        private readonly IIdentityService _identityService;
+        private readonly IUserDataService _userDataService;
+
         private HamburgerMenuItem _selectedMenuItem;
         private HamburgerMenuItem _selectedOptionsMenuItem;
         private RelayCommand _goBackCommand;
@@ -49,9 +53,11 @@ namespace WpfBasicForcedLogin.ViewModels
 
         public ICommand OptionsMenuItemInvokedCommand => _optionsMenuItemInvokedCommand ?? (_optionsMenuItemInvokedCommand = new RelayCommand(OnOptionsMenuItemInvoked));
 
-        public ShellViewModel(INavigationService navigationService)
+        public ShellViewModel(INavigationService navigationService, IIdentityService identityService, IUserDataService userDataService)
         {
             _navigationService = navigationService;
+            _identityService = identityService;
+            _userDataService = userDataService;
             _navigationService.Navigated += OnNavigated;
         }
 

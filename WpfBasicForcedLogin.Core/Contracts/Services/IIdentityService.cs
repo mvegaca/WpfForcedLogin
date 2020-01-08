@@ -10,11 +10,11 @@ namespace WpfBasicForcedLogin.Core.Contracts.Services
 
         event EventHandler LoggedOut;
 
-        void InitializeWithAadAndPersonalMsAccounts(string redirectUri = null);
+        Task InitializeWithAadAndPersonalMsAccountsAsync(string redirectUri = null);
 
-        void InitializeWithAadMultipleOrgs(bool integratedAuth = false, string redirectUri = null);
+        Task InitializeWithAadMultipleOrgsAsync(bool integratedAuth = false, string redirectUri = null);
 
-        void InitializeWithAadSingleOrg(string tenant, bool integratedAuth = false, string redirectUri = null);
+        Task InitializeWithAadSingleOrgAsync(string tenant, bool integratedAuth = false, string redirectUri = null);
 
         bool IsLoggedIn();
 

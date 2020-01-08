@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Microsoft.Identity.Client;
+using Microsoft.Identity.Client.Extensions.Msal;
 using WpfBasicForcedLogin.Core.Contracts.Services;
 using WpfBasicForcedLogin.Core.Helpers;
 
@@ -23,13 +24,16 @@ namespace WpfBasicForcedLogin.Core.Services
         // TODO WTS: The IdentityClientId in App.config is provided to test the project in development environments.
         // Please, follow these steps to create a new one with Azure Active Directory and replace it before going to production.
         // https://docs.microsoft.com/azure/active-directory/develop/quickstart-register-app
-        // private readonly string _clientId = ConfigurationManager.AppSettings["IdentityClientId"];
-        // private readonly string _clientId = "881e8dd2-ee52-455d-b731-ad3c56fdce97"; // UWP
-        private readonly string _clientId = "31f2256a-e9aa-4626-be94-21c17add8fd9"; // WPF
+        private readonly string _clientId = "31f2256a-e9aa-4626-be94-21c17add8fd9";
+        private readonly string _cacheFileName = ".msalcache.dat";
+        private readonly string _cacheDir = "MSAL_CACHE";
+        private readonly StorageCreationProperties _storageCreationProperties;
         private readonly string[] _graphScopes = new string[] { "user.read" };
-        private readonly IIdentityCacheService _identityCacheService;
         private bool _integratedAuthAvailable;
         private IPublicClientApplication _client;
+
+        // https://aka.ms/msal-net-token-cache-serialization
+        private MsalCacheHelper _cacheHelper;
         private AuthenticationResult _authenticationResult;
 
         public event EventHandler LoggedIn;
@@ -38,41 +42,37 @@ namespace WpfBasicForcedLogin.Core.Services
 
         public IdentityService()
         {
+            _storageCreationProperties = new StorageCreationPropertiesBuilder(_cacheFileName, _cacheDir, _clientId).Build();
         }
 
-        public IdentityService(IIdentityCacheService identityCacheService)
-        {
-            _identityCacheService = identityCacheService;
-        }
-
-        public void InitializeWithAadAndPersonalMsAccounts(string redirectUri = null)
+        public async Task InitializeWithAadAndPersonalMsAccountsAsync(string redirectUri = null)
         {
             _integratedAuthAvailable = false;
             _client = PublicClientApplicationBuilder.Create(_clientId)
                                                     .WithAuthority(AadAuthorityAudience.AzureAdAndPersonalMicrosoftAccount)
                                                     .WithRedirectUri(redirectUri)
                                                     .Build();
-            AddCacheIfNeeded();
+            await ConfigureCacheAsync();
         }
 
-        public void InitializeWithAadMultipleOrgs(bool integratedAuth = false, string redirectUri = null)
+        public async Task InitializeWithAadMultipleOrgsAsync(bool integratedAuth = false, string redirectUri = null)
         {
             _integratedAuthAvailable = integratedAuth;
             _client = PublicClientApplicationBuilder.Create(_clientId)
                                                     .WithAuthority(AadAuthorityAudience.AzureAdMultipleOrgs)
                                                     .WithRedirectUri(redirectUri)
                                                     .Build();
-            AddCacheIfNeeded();
+            await ConfigureCacheAsync();
         }
 
-        public void InitializeWithAadSingleOrg(string tenant, bool integratedAuth = false, string redirectUri = null)
+        public async Task InitializeWithAadSingleOrgAsync(string tenant, bool integratedAuth = false, string redirectUri = null)
         {
             _integratedAuthAvailable = integratedAuth;
             _client = PublicClientApplicationBuilder.Create(_clientId)
                                                     .WithAuthority(AzureCloudInstance.AzurePublic, tenant)
                                                     .WithRedirectUri(redirectUri)
                                                     .Build();
-            AddCacheIfNeeded();
+            await ConfigureCacheAsync();
         }
 
         public bool IsLoggedIn() => _authenticationResult != null;
@@ -227,28 +227,11 @@ namespace WpfBasicForcedLogin.Core.Services
             }
         }
 
-        private void AddCacheIfNeeded()
+        private async Task ConfigureCacheAsync()
         {
-            if (_identityCacheService != null)
-            {
-                // .Net Core Apps should provide a mechanism to serialize and deserialize the user token cache
-                // https://aka.ms/msal-net-token-cache-serialization
-                _client.UserTokenCache.SetBeforeAccess((args) =>
-                {
-                    var data = _identityCacheService.ReadMsalToken();
-                    if (data != default)
-                    {
-                        args.TokenCache.DeserializeMsalV3(data);
-                    }
-                });
-                _client.UserTokenCache.SetAfterAccess((args) =>
-                {
-                    if (args.HasStateChanged)
-                    {
-                        _identityCacheService.SaveMsalToken(args.TokenCache.SerializeMsalV3());
-                    }
-                });
-            }
+            // https://aka.ms/msal-net-token-cache-serialization
+            _cacheHelper = await MsalCacheHelper.CreateAsync(_storageCreationProperties).ConfigureAwait(false);
+            _cacheHelper.RegisterCache(_client.UserTokenCache);
         }
     }
 }

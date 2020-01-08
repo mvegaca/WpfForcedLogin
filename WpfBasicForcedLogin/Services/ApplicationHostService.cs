@@ -40,7 +40,7 @@ namespace WpfBasicForcedLogin.Services
             _userDataService.Initialize();
             _identityService.LoggedIn += OnLoggedIn;
             _identityService.LoggedOut += OnLoggedOut;
-            _identityService.InitializeWithAadAndPersonalMsAccounts("http://localhost");
+            await _identityService.InitializeWithAadAndPersonalMsAccountsAsync("http://localhost");
             var silentLoginSuccess = await _identityService.AcquireTokenSilentAsync();
             if (!silentLoginSuccess || !_identityService.IsAuthorized())
             {
