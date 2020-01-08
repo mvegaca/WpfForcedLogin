@@ -9,5 +9,11 @@
         public string UserFileName { get; set; }
 
         public string PrivacyStatement { get; set; }
+
+        public string IdentityClientId { get; set; }
+
+        public string IdentityCacheFileName { get; set; }
+
+        public string IdentityCacheDirectoryName { get; set; }
     }
 }

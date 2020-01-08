@@ -10,6 +10,7 @@ using WpfBasicForcedLogin.Core.Services;
 using Windows.ApplicationModel.Activation;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using System.Configuration;
 
 namespace UwpBasicForcedLogin.Services
 {
@@ -43,7 +44,8 @@ namespace UwpBasicForcedLogin.Services
                 // take into account that the splash screen is shown while this code runs.
                 await InitializeAsync();
                 UserDataService.Initialize();
-                await IdentityService.InitializeWithAadAndPersonalMsAccountsAsync();
+                var clientId = ConfigurationManager.AppSettings["IdentityClientId"];
+                IdentityService.InitializeWithAadAndPersonalMsAccounts(clientId);
                 var silentLoginSuccess = await IdentityService.AcquireTokenSilentAsync();
                 if (!silentLoginSuccess || !IdentityService.IsAuthorized())
                 {

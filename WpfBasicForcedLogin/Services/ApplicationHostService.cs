@@ -3,10 +3,12 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Hosting;
-
+using Microsoft.Extensions.Options;
+using Microsoft.Identity.Client.Extensions.Msal;
 using WpfBasicForcedLogin.Contracts.Services;
 using WpfBasicForcedLogin.Contracts.Views;
 using WpfBasicForcedLogin.Core.Contracts.Services;
+using WpfBasicForcedLogin.Models;
 using WpfBasicForcedLogin.ViewModels;
 
 namespace WpfBasicForcedLogin.Services
@@ -19,11 +21,12 @@ namespace WpfBasicForcedLogin.Services
         private readonly IThemeSelectorService _themeSelectorService;
         private readonly IIdentityService _identityService;
         private readonly IUserDataService _userDataService;
+        private readonly AppConfig _config;
 
         private IShellWindow _shellWindow;
         private ILogInWindow _logInWindow;
 
-        public ApplicationHostService(IServiceProvider serviceProvider, INavigationService navigationService, IThemeSelectorService themeSelectorService, IPersistAndRestoreService persistAndRestoreService, IIdentityService identityService, IUserDataService userDataService)
+        public ApplicationHostService(IServiceProvider serviceProvider, INavigationService navigationService, IThemeSelectorService themeSelectorService, IPersistAndRestoreService persistAndRestoreService, IIdentityService identityService, IUserDataService userDataService, IOptions<AppConfig> config)
         {
             _serviceProvider = serviceProvider;
             _navigationService = navigationService;
@@ -31,6 +34,7 @@ namespace WpfBasicForcedLogin.Services
             _persistAndRestoreService = persistAndRestoreService;
             _identityService = identityService;
             _userDataService = userDataService;
+            _config = config.Value;
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -40,7 +44,11 @@ namespace WpfBasicForcedLogin.Services
             _userDataService.Initialize();
             _identityService.LoggedIn += OnLoggedIn;
             _identityService.LoggedOut += OnLoggedOut;
-            await _identityService.InitializeWithAadAndPersonalMsAccountsAsync("http://localhost");
+
+            // https://aka.ms/msal-net-token-cache-serialization
+            var storageCreationProperties = new StorageCreationPropertiesBuilder(_config.IdentityCacheFileName, _config.IdentityCacheDirectoryName, _config.IdentityClientId).Build();
+            var cacheHelper = await MsalCacheHelper.CreateAsync(storageCreationProperties).ConfigureAwait(false);
+            _identityService.InitializeWithAadAndPersonalMsAccounts(_config.IdentityClientId, "http://localhost", cacheHelper);
             var silentLoginSuccess = await _identityService.AcquireTokenSilentAsync();
             if (!silentLoginSuccess || !_identityService.IsAuthorized())
             {
@@ -97,9 +105,6 @@ namespace WpfBasicForcedLogin.Services
             // Close the Shell Window and
             _shellWindow.CloseWindow();
             _navigationService.UnregisterNavigation();
-
-            // _shellWindow = _serviceProvider.GetService(typeof(IShellWindow)) as IShellWindow;
-            // _navigationService.Initialize(_shellWindow.GetNavigationFrame());
         }
     }
 }

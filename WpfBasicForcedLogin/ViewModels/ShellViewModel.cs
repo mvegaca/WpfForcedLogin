@@ -20,6 +20,7 @@ namespace WpfBasicForcedLogin.ViewModels
 
         private HamburgerMenuItem _selectedMenuItem;
         private HamburgerMenuItem _selectedOptionsMenuItem;
+        private ICommand _loadCommand;
         private RelayCommand _goBackCommand;
         private ICommand _menuItemInvokedCommand;
         private ICommand _optionsMenuItemInvokedCommand;
@@ -47,6 +48,8 @@ namespace WpfBasicForcedLogin.ViewModels
             new HamburgerMenuGlyphItem() { Label = Resources.ShellSettingsPage, Glyph = "\uE713", TargetPageType = typeof(SettingsViewModel) }
         };
 
+        public ICommand LoadCommand => _loadCommand ?? (_loadCommand = new RelayCommand(OnLoad));
+
         public RelayCommand GoBackCommand => _goBackCommand ?? (_goBackCommand = new RelayCommand(OnGoBack, CanGoBack));
 
         public ICommand MenuItemInvokedCommand => _menuItemInvokedCommand ?? (_menuItemInvokedCommand = new RelayCommand(OnMenuItemInvoked));
@@ -59,11 +62,34 @@ namespace WpfBasicForcedLogin.ViewModels
             _identityService = identityService;
             _userDataService = userDataService;
             _navigationService.Navigated += OnNavigated;
+            _userDataService.UserDataUpdated += OnUserDataUpdated;
         }
 
         public void Dispose()
         {
             _navigationService.Navigated -= OnNavigated;
+        }
+
+        private void OnLoad()
+        {
+            var user = _userDataService.GetUser();
+            var userMenuItem = new HamburgerMenuImageItem()
+            {
+                Thumbnail = user.Photo,
+                Label = user.Name,
+                Command = new RelayCommand(OnUserItemSelected)
+            };
+
+            OptionMenuItems.Insert(0, userMenuItem);
+        }
+
+        private void OnUserDataUpdated(object sender, UserViewModel user)
+        {
+            var userMenuItem = OptionMenuItems.OfType<HamburgerMenuImageItem>().FirstOrDefault();
+            if (userMenuItem != null)
+            {
+                userMenuItem.Thumbnail = user.Photo;
+            }
         }
 
         private bool CanGoBack()
@@ -73,10 +99,21 @@ namespace WpfBasicForcedLogin.ViewModels
             => _navigationService.GoBack();
 
         private void OnMenuItemInvoked()
-            => _navigationService.NavigateTo(SelectedMenuItem.TargetPageType.FullName);
+            => Navigate(SelectedMenuItem.TargetPageType);
 
         private void OnOptionsMenuItemInvoked()
-            => _navigationService.NavigateTo(SelectedOptionsMenuItem.TargetPageType.FullName);
+            => Navigate(SelectedOptionsMenuItem.TargetPageType);
+
+        private void OnUserItemSelected()
+            => _navigationService.NavigateTo(typeof(SettingsViewModel).FullName);
+
+        private void Navigate(Type targetViewModel)
+        {
+            if (targetViewModel != null)
+            {
+                _navigationService.NavigateTo(targetViewModel.FullName);
+            }
+        }
 
         private void OnNavigated(object sender, string viewModelName)
         {
@@ -91,7 +128,7 @@ namespace WpfBasicForcedLogin.ViewModels
             {
                 SelectedOptionsMenuItem = OptionMenuItems
                         .OfType<HamburgerMenuItem>()
-                        .FirstOrDefault(i => viewModelName == i.TargetPageType.FullName);
+                        .FirstOrDefault(i => viewModelName == i.TargetPageType?.FullName);
             }
 
             GoBackCommand.OnCanExecuteChanged();

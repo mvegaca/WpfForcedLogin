@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using System.Windows.Media.Imaging;
 
 namespace WpfBasicForcedLogin.Helpers
@@ -18,7 +19,8 @@ namespace WpfBasicForcedLogin.Helpers
 
         public static BitmapImage ImageFromAssetsFile(string fileName)
         {
-            var image = new BitmapImage(new Uri($"ms-appx:///Assets/{fileName}"));
+            var imageUri = new Uri($"pack://application:,,,/Assets/{fileName}");
+            var image = new BitmapImage(imageUri);
             return image;
         }
     }

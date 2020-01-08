@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.Identity.Client.Extensions.Msal;
 using WpfBasicForcedLogin.Core.Helpers;
 
 namespace WpfBasicForcedLogin.Core.Contracts.Services
@@ -10,11 +11,11 @@ namespace WpfBasicForcedLogin.Core.Contracts.Services
 
         event EventHandler LoggedOut;
 
-        Task InitializeWithAadAndPersonalMsAccountsAsync(string redirectUri = null);
+        void InitializeWithAadAndPersonalMsAccounts(string clientId, string redirectUri = null, MsalCacheHelper cacheHelper = null);
 
-        Task InitializeWithAadMultipleOrgsAsync(bool integratedAuth = false, string redirectUri = null);
+        void InitializeWithAadMultipleOrgs(string clientId, bool integratedAuth = false, string redirectUri = null, MsalCacheHelper cacheHelper = null);
 
-        Task InitializeWithAadSingleOrgAsync(string tenant, bool integratedAuth = false, string redirectUri = null);
+        void InitializeWithAadSingleOrg(string clientId, string tenant, bool integratedAuth = false, string redirectUri = null, MsalCacheHelper cacheHelper = null);
 
         bool IsLoggedIn();
 
