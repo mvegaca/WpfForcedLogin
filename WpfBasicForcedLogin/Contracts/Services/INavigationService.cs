@@ -15,6 +15,6 @@ namespace WpfBasicForcedLogin.Contracts.Services
 
         void GoBack();
 
-        void UnregisterNavigation();
+        void UnsubscribeNavigation();
     }
 }

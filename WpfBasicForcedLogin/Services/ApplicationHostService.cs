@@ -41,9 +41,6 @@ namespace WpfBasicForcedLogin.Services
         {
             // Initialize services that you need before app activation
             await InitializeAsync();
-            _userDataService.Initialize();
-            _identityService.LoggedIn += OnLoggedIn;
-            _identityService.LoggedOut += OnLoggedOut;
 
             // https://aka.ms/msal-net-token-cache-serialization
             var storageCreationProperties = new StorageCreationPropertiesBuilder(_config.IdentityCacheFileName, _config.IdentityCacheDirectoryName, _config.IdentityClientId).Build();
@@ -80,6 +77,9 @@ namespace WpfBasicForcedLogin.Services
             await Task.CompletedTask;
             _persistAndRestoreService.RestoreData();
             _themeSelectorService.SetTheme();
+            _userDataService.Initialize();
+            _identityService.LoggedIn += OnLoggedIn;
+            _identityService.LoggedOut += OnLoggedOut;
         }
 
         private async Task StartupAsync()
@@ -104,7 +104,7 @@ namespace WpfBasicForcedLogin.Services
 
             // Close the Shell Window and
             _shellWindow.CloseWindow();
-            _navigationService.UnregisterNavigation();
+            _navigationService.UnsubscribeNavigation();
         }
     }
 }

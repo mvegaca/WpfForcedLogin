@@ -68,6 +68,7 @@ namespace WpfBasicForcedLogin.ViewModels
         public void Dispose()
         {
             _navigationService.Navigated -= OnNavigated;
+            _userDataService.UserDataUpdated -= OnUserDataUpdated;
         }
 
         private void OnLoad()
@@ -99,15 +100,15 @@ namespace WpfBasicForcedLogin.ViewModels
             => _navigationService.GoBack();
 
         private void OnMenuItemInvoked()
-            => Navigate(SelectedMenuItem.TargetPageType);
+            => NavigateTo(SelectedMenuItem.TargetPageType);
 
         private void OnOptionsMenuItemInvoked()
-            => Navigate(SelectedOptionsMenuItem.TargetPageType);
+            => NavigateTo(SelectedOptionsMenuItem.TargetPageType);
 
         private void OnUserItemSelected()
-            => _navigationService.NavigateTo(typeof(SettingsViewModel).FullName);
+            => NavigateTo(typeof(SettingsViewModel));
 
-        private void Navigate(Type targetViewModel)
+        private void NavigateTo(Type targetViewModel)
         {
             if (targetViewModel != null)
             {

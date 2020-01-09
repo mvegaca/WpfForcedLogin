@@ -79,7 +79,7 @@ namespace WpfBasicForcedLogin.Services
             }
         }
 
-        public void UnregisterNavigation()
+        public void UnsubscribeNavigation()
         {
             _frame.Navigated -= OnNavigated;
             _frame = null;

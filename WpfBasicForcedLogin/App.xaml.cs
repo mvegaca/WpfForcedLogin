@@ -46,6 +46,8 @@ namespace WpfBasicForcedLogin
 
             // App Host
             services.AddHostedService<ApplicationHostService>();
+
+            // Core Services
             services.AddSingleton<IFilesService, FilesService>();
             services.AddSingleton<IMicrosoftGraphService, MicrosoftGraphService>();
             services.AddSingleton<IIdentityService, IdentityService>();
