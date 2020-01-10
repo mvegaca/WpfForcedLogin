@@ -6,9 +6,9 @@
 
         public string AppPropertiesFileName { get; set; }
 
-        public string UserFileName { get; set; }
-
         public string PrivacyStatement { get; set; }
+
+        public string UserFileName { get; set; }
 
         public string IdentityClientId { get; set; }
 

@@ -15,7 +15,6 @@ namespace WpfBasicForcedLogin.ViewModels
     public class ShellViewModel : Observable, IDisposable
     {
         private readonly INavigationService _navigationService;
-        private readonly IIdentityService _identityService;
         private readonly IUserDataService _userDataService;
 
         private HamburgerMenuItem _selectedMenuItem;
@@ -56,10 +55,9 @@ namespace WpfBasicForcedLogin.ViewModels
 
         public ICommand OptionsMenuItemInvokedCommand => _optionsMenuItemInvokedCommand ?? (_optionsMenuItemInvokedCommand = new RelayCommand(OnOptionsMenuItemInvoked));
 
-        public ShellViewModel(INavigationService navigationService, IIdentityService identityService, IUserDataService userDataService)
+        public ShellViewModel(INavigationService navigationService, IUserDataService userDataService)
         {
             _navigationService = navigationService;
-            _identityService = identityService;
             _userDataService = userDataService;
             _navigationService.Navigated += OnNavigated;
             _userDataService.UserDataUpdated += OnUserDataUpdated;

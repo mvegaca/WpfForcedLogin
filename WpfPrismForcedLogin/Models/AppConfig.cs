@@ -1,4 +1,4 @@
-﻿namespace WpfLightForcedLogin.Models
+﻿namespace WpfPrismForcedLogin.Models
 {
     public class AppConfig
     {
