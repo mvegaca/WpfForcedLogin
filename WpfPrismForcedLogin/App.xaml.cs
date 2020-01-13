@@ -36,12 +36,21 @@ namespace WpfPrismForcedLogin
         protected async override void InitializeShell(Window shell)
         {
             base.InitializeShell(shell);
+            var persistAndRestoreService = Container.Resolve<IPersistAndRestoreService>();
+            persistAndRestoreService.RestoreData();
+            var themeSelectorService = Container.Resolve<IThemeSelectorService>();
+            themeSelectorService.SetTheme();
             var identityService = Container.Resolve<IIdentityService>();
+            identityService.LoggedIn += OnLoggedIn;
+            identityService.LoggedOut += OnLoggedOut;
             var silentLoginSuccess = await identityService.AcquireTokenSilentAsync();
             if (!silentLoginSuccess || !identityService.IsAuthorized())
             {
                 ShowLogInWindow();
             }
+
+            var userDataService = Container.Resolve<IUserDataService>();
+            userDataService.Initialize();
         }
 
         private void OnLoggedIn(object sender, EventArgs e)
@@ -74,20 +83,6 @@ namespace WpfPrismForcedLogin
                     Application.Current.Shutdown();
                 }
             }
-        }
-
-        public override void Initialize()
-        {
-            base.Initialize();
-            var persistAndRestoreService = Container.Resolve<IPersistAndRestoreService>();
-            persistAndRestoreService.RestoreData();
-            var themeSelectorService = Container.Resolve<IThemeSelectorService>();
-            themeSelectorService.SetTheme();
-            var userDataService = Container.Resolve<IUserDataService>();
-            userDataService.Initialize();
-            var identityService = Container.Resolve<IIdentityService>();
-            identityService.LoggedIn += OnLoggedIn;
-            identityService.LoggedOut += OnLoggedOut;
         }
 
         protected override void OnStartup(StartupEventArgs e)
