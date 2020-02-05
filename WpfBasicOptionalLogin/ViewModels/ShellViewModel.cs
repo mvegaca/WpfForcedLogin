@@ -131,6 +131,7 @@ namespace WpfBasicOptionalLogin.ViewModels
             if (userMenuItem != null)
             {
                 userMenuItem.Thumbnail = user.Photo;
+                userMenuItem.Label = user.Name;
             }
         }
 
