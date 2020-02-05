@@ -2,7 +2,6 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <RootNamespace>WpfBasicForcedLogin</RootNamespace>
     <UseWPF>true</UseWPF>
   </PropertyGroup>
@@ -31,17 +30,12 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.0.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="MahApps.Metro" Version="2.0.0-alpha0605" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118" />
+    <PackageReference Include="MahApps.Metro" Version="2.0.0-alpha0660" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\WpfBasicForcedLogin.Core\WpfBasicForcedLogin.Core.csproj">
-      <Project>{d04b7a19-2365-45db-ad45-7907a2087126}</Project>
+      <Project>{5e725e4d-af21-4a72-8651-84aebf0a9884}</Project>
       <Name>WpfBasicForcedLogin.Core</Name>
     </ProjectReference>
   </ItemGroup>

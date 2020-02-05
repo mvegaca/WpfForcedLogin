@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+
 using Microsoft.Extensions.Options;
+
 using WpfBasicForcedLogin.Contracts.Services;
 using WpfBasicForcedLogin.Core.Contracts.Services;
 using WpfBasicForcedLogin.Core.Models;
@@ -13,7 +15,7 @@ namespace WpfBasicForcedLogin.Services
 {
     public class UserDataService : IUserDataService
     {
-        private readonly IFilesService _filesService;
+        private readonly IFileService _fileService;
         private readonly IIdentityService _identityService;
         private readonly IMicrosoftGraphService _microsoftGraphService;
         private readonly AppConfig _config;
@@ -22,9 +24,9 @@ namespace WpfBasicForcedLogin.Services
 
         public event EventHandler<UserViewModel> UserDataUpdated;
 
-        public UserDataService(IFilesService filesService, IIdentityService identityService, IMicrosoftGraphService microsoftGraphService, IOptions<AppConfig> config)
+        public UserDataService(IFileService fileService, IIdentityService identityService, IMicrosoftGraphService microsoftGraphService, IOptions<AppConfig> config)
         {
-            _filesService = filesService;
+            _fileService = fileService;
             _identityService = identityService;
             _microsoftGraphService = microsoftGraphService;
             _config = config.Value;
@@ -61,14 +63,14 @@ namespace WpfBasicForcedLogin.Services
             _user = null;
             var folderPath = Path.Combine(_localAppData, _config.ConfigurationsFolder);
             var fileName = _config.UserFileName;
-            _filesService.Save<User>(folderPath, fileName, null);
+            _fileService.Save<User>(folderPath, fileName, null);
         }
 
         private UserViewModel GetUserFromCache()
         {
             var folderPath = Path.Combine(_localAppData, _config.ConfigurationsFolder);
             var fileName = _config.UserFileName;
-            var cacheData = _filesService.Read<User>(folderPath, fileName);
+            var cacheData = _fileService.Read<User>(folderPath, fileName);
             return GetUserViewModelFromData(cacheData);
         }
 
@@ -86,7 +88,7 @@ namespace WpfBasicForcedLogin.Services
                 userData.Photo = await _microsoftGraphService.GetUserPhoto(accessToken);
                 var folderPath = Path.Combine(_localAppData, _config.ConfigurationsFolder);
                 var fileName = _config.UserFileName;
-                _filesService.Save<User>(folderPath, fileName, userData);
+                _fileService.Save<User>(folderPath, fileName, userData);
             }
 
             return GetUserViewModelFromData(userData);

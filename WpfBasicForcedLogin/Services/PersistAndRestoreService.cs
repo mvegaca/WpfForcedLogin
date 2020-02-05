@@ -12,13 +12,13 @@ namespace WpfBasicForcedLogin.Services
 {
     public class PersistAndRestoreService : IPersistAndRestoreService
     {
-        private readonly IFilesService _filesService;
+        private readonly IFileService _fileService;
         private readonly AppConfig _config;
         private readonly string _localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-        public PersistAndRestoreService(IFilesService filesService, IOptions<AppConfig> config)
+        public PersistAndRestoreService(IFileService fileService, IOptions<AppConfig> config)
         {
-            _filesService = filesService;
+            _fileService = fileService;
             _config = config.Value;
         }
 
@@ -28,7 +28,7 @@ namespace WpfBasicForcedLogin.Services
             {
                 var folderPath = Path.Combine(_localAppData, _config.ConfigurationsFolder);
                 var fileName = _config.AppPropertiesFileName;
-                _filesService.Save(folderPath, fileName, App.Current.Properties);
+                _fileService.Save(folderPath, fileName, App.Current.Properties);
             }
         }
 
@@ -36,7 +36,7 @@ namespace WpfBasicForcedLogin.Services
         {
             var folderPath = Path.Combine(_localAppData, _config.ConfigurationsFolder);
             var fileName = _config.AppPropertiesFileName;
-            var properties = _filesService.Read<IDictionary>(folderPath, fileName);
+            var properties = _fileService.Read<IDictionary>(folderPath, fileName);
             if (properties != null)
             {
                 foreach (DictionaryEntry property in properties)

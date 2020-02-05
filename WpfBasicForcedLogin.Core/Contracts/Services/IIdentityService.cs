@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
+
 using Microsoft.Identity.Client.Extensions.Msal;
+
 using WpfBasicForcedLogin.Core.Helpers;
 
 namespace WpfBasicForcedLogin.Core.Contracts.Services

@@ -88,7 +88,7 @@ namespace WpfBasicForcedLogin.Strings {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to LogIn.
+        ///   Looks up a localized string similar to Log In.
         /// </summary>
         public static string LogInPageTitle {
             get {
@@ -102,6 +102,15 @@ namespace WpfBasicForcedLogin.Strings {
         public static string MainPageTitle {
             get {
                 return ResourceManager.GetString("MainPageTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MasterDetail.
+        /// </summary>
+        public static string MasterDetailPageTitle {
+            get {
+                return ResourceManager.GetString("MasterDetailPageTitle", resourceCulture);
             }
         }
         
@@ -201,6 +210,15 @@ namespace WpfBasicForcedLogin.Strings {
         public static string ShellMainPage {
             get {
                 return ResourceManager.GetString("ShellMainPage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MasterDetail.
+        /// </summary>
+        public static string ShellMasterDetailPage {
+            get {
+                return ResourceManager.GetString("ShellMasterDetailPage", resourceCulture);
             }
         }
         

@@ -6,23 +6,22 @@ using System.Windows.Input;
 using MahApps.Metro.Controls;
 
 using WpfBasicForcedLogin.Contracts.Services;
-using WpfBasicForcedLogin.Core.Contracts.Services;
 using WpfBasicForcedLogin.Helpers;
 using WpfBasicForcedLogin.Strings;
 
 namespace WpfBasicForcedLogin.ViewModels
 {
-    public class ShellViewModel : Observable, IDisposable
+    public class ShellViewModel : Observable
     {
         private readonly INavigationService _navigationService;
         private readonly IUserDataService _userDataService;
-
         private HamburgerMenuItem _selectedMenuItem;
         private HamburgerMenuItem _selectedOptionsMenuItem;
-        private ICommand _loadCommand;
         private RelayCommand _goBackCommand;
         private ICommand _menuItemInvokedCommand;
         private ICommand _optionsMenuItemInvokedCommand;
+        private ICommand _loadedCommand;
+        private ICommand _unloadedCommand;
 
         public HamburgerMenuItem SelectedMenuItem
         {
@@ -39,7 +38,8 @@ namespace WpfBasicForcedLogin.ViewModels
         // TODO WTS: Change the icons and titles for all HamburgerMenuItems here.
         public ObservableCollection<HamburgerMenuItem> MenuItems { get; } = new ObservableCollection<HamburgerMenuItem>()
         {
-            new HamburgerMenuGlyphItem() { Label = Resources.ShellMainPage, Glyph = "\uE8A5", TargetPageType = typeof(MainViewModel) }
+            new HamburgerMenuGlyphItem() { Label = Resources.ShellMainPage, Glyph = "\uE8A5", TargetPageType = typeof(MainViewModel) },
+            new HamburgerMenuGlyphItem() { Label = Resources.ShellMasterDetailPage, Glyph = "\uE8A5", TargetPageType = typeof(MasterDetailViewModel) },
         };
 
         public ObservableCollection<HamburgerMenuItem> OptionMenuItems { get; } = new ObservableCollection<HamburgerMenuItem>()
@@ -47,29 +47,25 @@ namespace WpfBasicForcedLogin.ViewModels
             new HamburgerMenuGlyphItem() { Label = Resources.ShellSettingsPage, Glyph = "\uE713", TargetPageType = typeof(SettingsViewModel) }
         };
 
-        public ICommand LoadCommand => _loadCommand ?? (_loadCommand = new RelayCommand(OnLoad));
-
         public RelayCommand GoBackCommand => _goBackCommand ?? (_goBackCommand = new RelayCommand(OnGoBack, CanGoBack));
 
         public ICommand MenuItemInvokedCommand => _menuItemInvokedCommand ?? (_menuItemInvokedCommand = new RelayCommand(OnMenuItemInvoked));
 
         public ICommand OptionsMenuItemInvokedCommand => _optionsMenuItemInvokedCommand ?? (_optionsMenuItemInvokedCommand = new RelayCommand(OnOptionsMenuItemInvoked));
 
+        public ICommand LoadedCommand => _loadedCommand ?? (_loadedCommand = new RelayCommand(OnLoaded));
+
+        public ICommand UnloadedCommand => _unloadedCommand ?? (_unloadedCommand = new RelayCommand(OnUnloaded));
+
         public ShellViewModel(INavigationService navigationService, IUserDataService userDataService)
         {
             _navigationService = navigationService;
-            _userDataService = userDataService;
             _navigationService.Navigated += OnNavigated;
+            _userDataService = userDataService;
             _userDataService.UserDataUpdated += OnUserDataUpdated;
         }
 
-        public void Dispose()
-        {
-            _navigationService.Navigated -= OnNavigated;
-            _userDataService.UserDataUpdated -= OnUserDataUpdated;
-        }
-
-        private void OnLoad()
+        private void OnLoaded()
         {
             var user = _userDataService.GetUser();
             var userMenuItem = new HamburgerMenuImageItem()
@@ -80,6 +76,12 @@ namespace WpfBasicForcedLogin.ViewModels
             };
 
             OptionMenuItems.Insert(0, userMenuItem);
+        }
+
+        private void OnUnloaded()
+        {
+            _navigationService.Navigated -= OnNavigated;
+            _userDataService.UserDataUpdated -= OnUserDataUpdated;
         }
 
         private void OnUserDataUpdated(object sender, UserViewModel user)
@@ -118,7 +120,7 @@ namespace WpfBasicForcedLogin.ViewModels
         {
             var item = MenuItems
                         .OfType<HamburgerMenuItem>()
-                        .FirstOrDefault(i => viewModelName == i.TargetPageType.FullName);
+                        .FirstOrDefault(i => viewModelName == i.TargetPageType?.FullName);
             if (item != null)
             {
                 SelectedMenuItem = item;

@@ -10,12 +10,13 @@ namespace WpfBasicForcedLogin.Services
     public class NavigationService : INavigationService
     {
         private readonly IPageService _pageService;
-        private Frame _frame;
         private object _lastParameterUsed;
 
         public event EventHandler<string> Navigated;
 
-        public bool CanGoBack => _frame.CanGoBack;
+        public Frame Frame { get; private set; }
+
+        public bool CanGoBack => Frame.CanGoBack;
 
         public NavigationService(IPageService pageService)
         {
@@ -24,29 +25,35 @@ namespace WpfBasicForcedLogin.Services
 
         public void Initialize(Frame shellFrame)
         {
-            if (_frame == null)
+            if (Frame == null)
             {
-                _frame = shellFrame;
-                _frame.Navigated += OnNavigated;
+                Frame = shellFrame;
+                Frame.Navigated += OnNavigated;
             }
         }
 
+        public void UnsubscribeNavigation()
+        {
+            Frame.Navigated -= OnNavigated;
+            Frame = null;
+        }
+
         public void GoBack()
-            => _frame.GoBack();
+            => Frame.GoBack();
 
         public bool NavigateTo(string pageKey, object parameter = null, bool clearNavigation = false)
         {
             var pageType = _pageService.GetPageType(pageKey);
 
-            if (_frame.Content?.GetType() != pageType || (parameter != null && !parameter.Equals(_lastParameterUsed)))
+            if (Frame.Content?.GetType() != pageType || (parameter != null && !parameter.Equals(_lastParameterUsed)))
             {
-                _frame.Tag = clearNavigation;
+                Frame.Tag = clearNavigation;
                 var page = _pageService.GetPage(pageKey);
-                var navigated = _frame.Navigate(page, parameter);
+                var navigated = Frame.Navigate(page, parameter);
                 if (navigated)
                 {
                     _lastParameterUsed = parameter;
-                    var dataContext = _frame.GetDataContext();
+                    var dataContext = Frame.GetDataContext();
                     if (dataContext is INavigationAware navigationAware)
                     {
                         navigationAware.OnNavigatedFrom();
@@ -77,12 +84,6 @@ namespace WpfBasicForcedLogin.Services
 
                 Navigated?.Invoke(sender, dataContext.GetType().FullName);
             }
-        }
-
-        public void UnsubscribeNavigation()
-        {
-            _frame.Navigated -= OnNavigated;
-            _frame = null;
         }
     }
 }

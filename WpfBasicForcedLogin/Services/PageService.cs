@@ -19,6 +19,7 @@ namespace WpfBasicForcedLogin.Services
         {
             _serviceProvider = serviceProvider;
             Configure<MainViewModel, MainPage>();
+            Configure<MasterDetailViewModel, MasterDetailPage>();
             Configure<SettingsViewModel, SettingsPage>();
         }
 

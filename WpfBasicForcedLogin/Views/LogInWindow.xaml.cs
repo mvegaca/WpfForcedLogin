@@ -1,4 +1,5 @@
 ﻿using MahApps.Metro.Controls;
+
 using WpfBasicForcedLogin.Contracts.Views;
 using WpfBasicForcedLogin.ViewModels;
 

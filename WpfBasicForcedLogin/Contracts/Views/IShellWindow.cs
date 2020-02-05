@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 
 namespace WpfBasicForcedLogin.Contracts.Views
 {

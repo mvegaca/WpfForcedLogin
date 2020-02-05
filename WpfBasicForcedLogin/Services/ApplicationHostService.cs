@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client.Extensions.Msal;
+
 using WpfBasicForcedLogin.Contracts.Services;
 using WpfBasicForcedLogin.Contracts.Views;
 using WpfBasicForcedLogin.Core.Contracts.Services;
@@ -67,9 +68,9 @@ namespace WpfBasicForcedLogin.Services
         public async Task StopAsync(CancellationToken cancellationToken)
         {
             await Task.CompletedTask;
+            _persistAndRestoreService.PersistData();
             _identityService.LoggedIn -= OnLoggedIn;
             _identityService.LoggedOut -= OnLoggedOut;
-            _persistAndRestoreService.PersistData();
         }
 
         private async Task InitializeAsync()

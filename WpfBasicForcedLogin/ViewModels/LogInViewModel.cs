@@ -1,4 +1,5 @@
 ﻿using System;
+
 using WpfBasicForcedLogin.Core.Contracts.Services;
 using WpfBasicForcedLogin.Core.Helpers;
 using WpfBasicForcedLogin.Helpers;

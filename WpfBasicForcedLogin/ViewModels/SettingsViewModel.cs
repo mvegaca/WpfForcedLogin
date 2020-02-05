@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reflection;
-using System.Windows;
 using System.Windows.Input;
 
 using Microsoft.Extensions.Options;
@@ -17,15 +16,15 @@ namespace WpfBasicForcedLogin.ViewModels
     public class SettingsViewModel : Observable, INavigationAware
     {
         private readonly AppConfig _config;
-        private readonly IThemeSelectorService _themeSelectorService;
         private readonly IUserDataService _userDataService;
         private readonly IIdentityService _identityService;
+        private readonly IThemeSelectorService _themeSelectorService;
         private AppTheme _theme;
         private string _versionDescription;
+        private UserViewModel _user;
         private ICommand _setThemeCommand;
         private ICommand _privacyStatementCommand;
-        private ICommand _logoutCommand;
-        private UserViewModel _user;
+        private ICommand _logOutCommand;
 
         public AppTheme Theme
         {
@@ -49,7 +48,7 @@ namespace WpfBasicForcedLogin.ViewModels
 
         public ICommand PrivacyStatementCommand => _privacyStatementCommand ?? (_privacyStatementCommand = new RelayCommand(OnPrivacyStatement));
 
-        public ICommand LogoutCommand => _logoutCommand ?? (_logoutCommand = new RelayCommand(OnLogout));
+        public ICommand LogOutCommand => _logOutCommand ?? (_logOutCommand = new RelayCommand(OnLogOut));
 
         public SettingsViewModel(IOptions<AppConfig> config, IThemeSelectorService themeSelectorService, IUserDataService userDataService, IIdentityService identityService)
         {
@@ -105,7 +104,7 @@ namespace WpfBasicForcedLogin.ViewModels
             Process.Start(psi);
         }
 
-        private async void OnLogout()
+        private async void OnLogOut()
         {
             await _identityService.LogoutAsync();
         }

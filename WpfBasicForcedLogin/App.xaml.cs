@@ -48,29 +48,33 @@ namespace WpfBasicForcedLogin
             services.AddHostedService<ApplicationHostService>();
 
             // Core Services
-            services.AddSingleton<IFilesService, FilesService>();
             services.AddSingleton<IMicrosoftGraphService, MicrosoftGraphService>();
             services.AddSingleton<IIdentityService, IdentityService>();
+            services.AddSingleton<IFileService, FileService>();
 
             // Services
+            services.AddSingleton<IPersistAndRestoreService, PersistAndRestoreService>();
+            services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
+            services.AddSingleton<ISampleDataService, SampleDataService>();
             services.AddSingleton<IPageService, PageService>();
             services.AddSingleton<INavigationService, NavigationService>();
-            services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
-            services.AddSingleton<IPersistAndRestoreService, PersistAndRestoreService>();
-            services.AddSingleton<IUserDataService, UserDataService>();
 
             // Views and ViewModels
-            services.AddTransient<ILogInWindow, LogInWindow>();
-            services.AddTransient<LogInViewModel>();
-
             services.AddTransient<IShellWindow, ShellWindow>();
             services.AddTransient<ShellViewModel>();
 
             services.AddTransient<MainViewModel>();
             services.AddTransient<MainPage>();
 
+            services.AddTransient<MasterDetailViewModel>();
+            services.AddTransient<MasterDetailPage>();
+
             services.AddTransient<SettingsViewModel>();
             services.AddTransient<SettingsPage>();
+
+            services.AddSingleton<IUserDataService, UserDataService>();
+            services.AddTransient<ILogInWindow, LogInWindow>();
+            services.AddTransient<LogInViewModel>();
 
             // Configuration
             services.Configure<AppConfig>(context.Configuration.GetSection(nameof(AppConfig)));
