@@ -9,6 +9,7 @@ using Microsoft.Identity.Client.Extensions.Msal;
 using WpfBasicForcedLogin.Contracts.Services;
 using WpfBasicForcedLogin.Contracts.Views;
 using WpfBasicForcedLogin.Core.Contracts.Services;
+using WpfBasicForcedLogin.Helpers;
 using WpfBasicForcedLogin.Models;
 using WpfBasicForcedLogin.ViewModels;
 
@@ -42,11 +43,8 @@ namespace WpfBasicForcedLogin.Services
         {
             // Initialize services that you need before app activation
             await InitializeAsync();
-
-            // https://aka.ms/msal-net-token-cache-serialization
-            var storageCreationProperties = new StorageCreationPropertiesBuilder(_config.IdentityCacheFileName, _config.IdentityCacheDirectoryName, _config.IdentityClientId).Build();
-            var cacheHelper = await MsalCacheHelper.CreateAsync(storageCreationProperties).ConfigureAwait(false);
-            _identityService.InitializeWithAadAndPersonalMsAccounts(_config.IdentityClientId, "http://localhost", cacheHelper);
+            
+            _identityService.InitializeWithAadAndPersonalMsAccounts(_config.IdentityClientId, "http://localhost");
             var silentLoginSuccess = await _identityService.AcquireTokenSilentAsync();
             if (!silentLoginSuccess || !_identityService.IsAuthorized())
             {

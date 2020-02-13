@@ -23,23 +23,28 @@ namespace WpfBasicForcedLogin.Core.Services
         //// https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/wiki
         //// https://docs.microsoft.com/azure/active-directory/develop/v2-overview
 
-        // TODO WTS: The IdentityClientId in App.config is provided to test the project in development environments.
+        // TODO WTS: The IdentityClientId in appsettings.json is provided to test the project in development environments.
         // Please, follow these steps to create a new one with Azure Active Directory and replace it before going to production.
         // https://docs.microsoft.com/azure/active-directory/develop/quickstart-register-app
+        // The provided clientID requests permissions on user.read, this might be blocked in environments that require admin consent. 
+        // For more info about admin consent please see https://docs.microsoft.com/azure/active-directory/develop/application-consent-experience
+
         private readonly string[] _graphScopes = new string[] { "user.read" };
         private bool _integratedAuthAvailable;
         private IPublicClientApplication _client;
         private AuthenticationResult _authenticationResult;
+        private readonly IIdentityCacheService _identityCacheService;
 
         public event EventHandler LoggedIn;
 
         public event EventHandler LoggedOut;
 
-        public IdentityService()
+        public IdentityService(IIdentityCacheService identityCacheService)
         {
+            _identityCacheService = identityCacheService;
         }
 
-        public void InitializeWithAadAndPersonalMsAccounts(string clientId, string redirectUri = null, MsalCacheHelper cacheHelper = null)
+        public void InitializeWithAadAndPersonalMsAccounts(string clientId, string redirectUri = null)
         {
             _integratedAuthAvailable = false;
             _client = PublicClientApplicationBuilder.Create(clientId)
@@ -47,28 +52,31 @@ namespace WpfBasicForcedLogin.Core.Services
                                                     .WithRedirectUri(redirectUri)
                                                     .Build();
 
-            cacheHelper?.RegisterCache(_client.UserTokenCache);
+            ConfigureCache();
         }
 
-        public void InitializeWithAadMultipleOrgs(string clientId, bool integratedAuth = false, string redirectUri = null, MsalCacheHelper cacheHelper = null)
+        public void InitializeWithAadMultipleOrgs(string clientId, bool integratedAuth = false, string redirectUri = null)
         {
             _integratedAuthAvailable = integratedAuth;
             _client = PublicClientApplicationBuilder.Create(clientId)
                                                     .WithAuthority(AadAuthorityAudience.AzureAdMultipleOrgs)
                                                     .WithRedirectUri(redirectUri)
                                                     .Build();
-            cacheHelper?.RegisterCache(_client.UserTokenCache);
+            ConfigureCache();
         }
 
-        public void InitializeWithAadSingleOrg(string clientId, string tenant, bool integratedAuth = false, string redirectUri = null, MsalCacheHelper cacheHelper = null)
+        public void InitializeWithAadSingleOrg(string clientId, string tenant, bool integratedAuth = false, string redirectUri = null)
         {
             _integratedAuthAvailable = integratedAuth;
+
+            // You can change the AzureCloundInstance to use a national cloud, for more info please see
+            // https://docs.microsoft.com/azure/active-directory/develop/authentication-national-cloud
             _client = PublicClientApplicationBuilder.Create(clientId)
                                                     .WithAuthority(AzureCloudInstance.AzurePublic, tenant)
                                                     .WithRedirectUri(redirectUri)
                                                     .Build();
 
-            cacheHelper?.RegisterCache(_client.UserTokenCache);
+            ConfigureCache();
         }
 
         public bool IsLoggedIn() => _authenticationResult != null;
@@ -147,6 +155,10 @@ namespace WpfBasicForcedLogin.Core.Services
 
         public async Task<string> GetAccessTokenForGraphAsync() => await GetAccessTokenAsync(_graphScopes);
 
+
+        // All sensitive data in your app should be retrieven using access tokens. 
+        // This method provides you with an access token to secure calls to the Microsoft Graph or other protected API.
+        // For more info on protecting web api with tokens see https://docs.microsoft.com/azure/active-directory/develop/scenario-protected-web-api-overview
         public async Task<string> GetAccessTokenAsync(string[] scopes)
         {
             var acquireTokenSuccess = await AcquireTokenSilentAsync(scopes);
@@ -223,13 +235,29 @@ namespace WpfBasicForcedLogin.Core.Services
             }
         }
 
-        private void ConfigureCache(MsalCacheHelper cacheHelper)
+        private void ConfigureCache()
         {
-            if (cacheHelper != null)
+            if (_identityCacheService != null)
             {
+                // .Net Core Apps should provide a mechanism to serialize and deserialize the user token cache
                 // https://aka.ms/msal-net-token-cache-serialization
-                cacheHelper.RegisterCache(_client.UserTokenCache);
+                _client.UserTokenCache.SetBeforeAccess((args) =>
+                {
+                    var data = _identityCacheService.ReadMsalToken();
+                    if (data != default)
+                    {
+                        args.TokenCache.DeserializeMsalV3(data);
+                    }
+                });
+                _client.UserTokenCache.SetAfterAccess((args) =>
+                {
+                    if (args.HasStateChanged)
+                    {
+                        _identityCacheService.SaveMsalToken(args.TokenCache.SerializeMsalV3());
+                    }
+                });
             }
+
         }
     }
 }

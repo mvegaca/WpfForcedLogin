@@ -13,11 +13,11 @@ namespace WpfBasicForcedLogin.Core.Contracts.Services
 
         event EventHandler LoggedOut;
 
-        void InitializeWithAadAndPersonalMsAccounts(string clientId, string redirectUri = null, MsalCacheHelper cacheHelper = null);
+        void InitializeWithAadAndPersonalMsAccounts(string clientId, string redirectUri = null);
 
-        void InitializeWithAadMultipleOrgs(string clientId, bool integratedAuth = false, string redirectUri = null, MsalCacheHelper cacheHelper = null);
+        void InitializeWithAadMultipleOrgs(string clientId, bool integratedAuth = false, string redirectUri = null);
 
-        void InitializeWithAadSingleOrg(string clientId, string tenant, bool integratedAuth = false, string redirectUri = null, MsalCacheHelper cacheHelper = null);
+        void InitializeWithAadSingleOrg(string clientId, string tenant, bool integratedAuth = false, string redirectUri = null);
 
         bool IsLoggedIn();
 
