@@ -41,10 +41,7 @@ namespace WpfBasicOptionalLogin.Services
             // Initialize services that you need before app activation
             await InitializeAsync();
 
-            // https://aka.ms/msal-net-token-cache-serialization
-            var storageCreationProperties = new StorageCreationPropertiesBuilder(_config.IdentityCacheFileName, _config.IdentityCacheDirectoryName, _config.IdentityClientId).Build();
-            var cacheHelper = await MsalCacheHelper.CreateAsync(storageCreationProperties).ConfigureAwait(false);
-            _identityService.InitializeWithAadAndPersonalMsAccounts(_config.IdentityClientId, "http://localhost", cacheHelper);
+            _identityService.InitializeWithAadAndPersonalMsAccounts(_config.IdentityClientId, "http://localhost");
             await _identityService.AcquireTokenSilentAsync();
 
             _shellWindow = _serviceProvider.GetService(typeof(IShellWindow)) as IShellWindow;

@@ -46,6 +46,11 @@ namespace WpfBasicOptionalLogin
 
             // App Host
             services.AddHostedService<ApplicationHostService>();
+            services.AddSingleton<IIdentityCacheService, IdentityCacheService>();
+            services.AddHttpClient("msgraph", client =>
+            {
+                client.BaseAddress = new System.Uri("https://graph.microsoft.com/v1.0/");
+            });
 
             // Core Services
             services.AddSingleton<IMicrosoftGraphService, MicrosoftGraphService>();

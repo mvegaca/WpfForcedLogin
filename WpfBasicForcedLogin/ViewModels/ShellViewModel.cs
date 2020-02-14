@@ -89,6 +89,7 @@ namespace WpfBasicForcedLogin.ViewModels
             var userMenuItem = OptionMenuItems.OfType<HamburgerMenuImageItem>().FirstOrDefault();
             if (userMenuItem != null)
             {
+                userMenuItem.Label = user.Name;
                 userMenuItem.Thumbnail = user.Photo;
             }
         }
